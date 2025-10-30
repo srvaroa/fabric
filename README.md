@@ -73,9 +73,37 @@ source.
 
 - **Run tests**: `just test`
 - **Run linters**: `just lint`
-- **Build for multiple platforms**: `just build-multi`
-- **Build Kubernetes artifacts**: `just kube-build`
+- **Build for multiple platforms**: `just build-multi` (builds hhfctl for Linux and macOS, both amd64 and arm64)
 - **Generate code/manifests**: `just gen`
+
+### Building Kubernetes Artifacts
+
+To build Docker images and Helm charts:
+
+```sh
+just kube-build
+```
+
+**Known Issue**: Due to a working directory issue in the justfile, `just kube-build` may fail with `cp: cannot stat 'bin/fabric'`. If this happens, manually copy the binaries and build the Docker images:
+
+```sh
+# Copy binaries to docker build directories
+cp bin/fabric config/docker/fabric/
+cp bin/fabric-dhcpd config/docker/fabric-dhcpd/
+cp bin/fabric-boot config/docker/fabric-boot/
+
+# Build Docker images manually
+cd config/docker/fabric && docker build --platform=linux/amd64 -t 127.0.0.1:30000/githedgehog/fabric/fabric:$(git describe --tags --always) -f Dockerfile .
+cd ../fabric-dhcpd && docker build --platform=linux/amd64 -t 127.0.0.1:30000/githedgehog/fabric/fabric-dhcpd:$(git describe --tags --always) -f Dockerfile .
+cd ../fabric-boot && docker build --platform=linux/amd64 -t 127.0.0.1:30000/githedgehog/fabric/fabric-boot:$(git describe --tags --always) -f Dockerfile .
+```
+
+Built images:
+- `127.0.0.1:30000/githedgehog/fabric/fabric:<version>`
+- `127.0.0.1:30000/githedgehog/fabric/fabric-dhcpd:<version>`
+- `127.0.0.1:30000/githedgehog/fabric/fabric-boot:<version>`
+
+Where `<version>` is determined by `git describe --tags --always`.
 
 ## Description
 // TODO(user): An in-depth paragraph about your project and overview of use
